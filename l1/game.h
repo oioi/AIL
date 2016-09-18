@@ -5,15 +5,15 @@
 
 enum class elem : unsigned char
 {
-   free = 0,
-   one,
+   one = 0,
    two,
    three,
    four,
    five,
    six,
    seven,
-   eight
+   eight,
+   free
 };
 
 enum { side = 3 };

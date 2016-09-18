@@ -6,13 +6,13 @@ int main(int argc, char *argv[])
    QApplication a(argc, argv);
 
    main_widget wgt {
-      { elem::two,   elem::three, elem::one,
-        elem::four,  elem::five,  elem::six,
-        elem::seven, elem::free,  elem::eight },
+      { elem::seven, elem::four, elem::two,
+        elem::three, elem::five, elem::eight,
+        elem::six,   elem::free, elem::one },
 
-      { elem::one,   elem::two,   elem::three,
-        elem::four,  elem::five,  elem::six,
-        elem::seven, elem::eight, elem::free }
+      { elem::one,  elem::two,   elem::three,
+        elem::four, elem::free,  elem::five,
+        elem::six,  elem::seven, elem::eight }
    };
 
    wgt.show();

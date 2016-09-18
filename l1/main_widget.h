@@ -6,12 +6,14 @@
 
 #include <QWidget>
 #include <QPlainTextEdit>
+#include <QSpinBox>
 #include <QPushButton>
 
 enum class state
 {
    init,
    solving,
+   unsolved,
    solved,
    replay
 };
@@ -27,7 +29,8 @@ class main_widget : public QWidget
 
    private slots:
       void solve();
-      void game_changed() { change_state(state::init); }
+      void replay();
+      void conditions_changed() { change_state(state::init); }
 
    private:
       game_widget *init_state;
@@ -35,6 +38,8 @@ class main_widget : public QWidget
       QPlainTextEdit *textout;
 
       QPushButton *solve_button;
+      QPushButton *replay_button;
+      QSpinBox *maxdepth_box;
 
       state laststate {state::init};
       solution last_solution;

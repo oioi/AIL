@@ -1,12 +1,70 @@
-#include <game_widget.h>
 #include "solver.h"
+#include "game_widget.h"
 
 #include <QtWidgets>
+
+std::unordered_map<elem, QPixmap> game_widget::numb_pixmaps;
+
+void game_widget::rebuild_icons()
+{
+   int i = -1;
+   QLayoutItem *child;
+   QLabel *icon;
+
+   for (auto e: state)
+   {
+      i++;
+      child  = layout->itemAtPosition(i / side, i % side);
+
+      if (elem::free == e)
+      {
+         if (nullptr == child) continue;
+         icon = static_cast<QLabel *>(child->widget());
+         layout->removeWidget(icon);
+         delete icon;
+         continue;
+      }
+
+      if (nullptr == child)
+      {
+         icon = new QLabel {this};
+         icon->setAttribute(Qt::WA_DeleteOnClose);
+         layout->addWidget(icon, i / side, i % side);
+      }
+      else icon = static_cast<QLabel *>(child->widget());
+
+      icon->setPixmap(numb_pixmaps[e]);
+   }
+}
+
+void game_widget::replay(const solution &steps, unsigned step_msecs)
+{
+   QLayoutItem *child;
+   QLabel *icon;
+   QTime steptime;
+
+   for (auto &step : steps)
+   {
+      child = layout->itemAtPosition(step.from / side, step.from % side);
+      icon = static_cast<QLabel *>(child->widget());
+      layout->removeWidget(icon);
+      layout->addWidget(icon, step.to / side, step.to % side);
+
+      steptime = QTime::currentTime().addMSecs(step_msecs);
+      while (QTime::currentTime() < steptime)
+          QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+   }
+
+   steptime = QTime::currentTime().addMSecs(2000);
+   while (QTime::currentTime() < steptime)
+       QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+   rebuild_icons();
+}
 
 game_widget::game_widget(const std::initializer_list<elem> &list, unsigned image_side_, QWidget *parent) :
    QFrame(parent), image_side{image_side_}
 {
-   constexpr int boxsize = side * side;
+   constexpr int boxsize {side * side};
    std::array<bool, boxsize> check;
    check.fill(false);
 
@@ -22,27 +80,24 @@ game_widget::game_widget(const std::initializer_list<elem> &list, unsigned image
       state[i++] = e;
    }
 
+   if (numb_pixmaps.empty())
+   {
+      QString filename {"./images/number"};
+      for (i = 0; i < boxsize - 1; i++)
+      {
+         QPixmap pixmap {filename + QString::number(i + 1) + ".png"};
+         numb_pixmaps.emplace(std::make_pair(static_cast<elem>(i),
+             pixmap.scaled(image_side, image_side, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+      }
+   }
+
    setFrameStyle(QFrame::Sunken | QFrame::StyledPanel);
    setAcceptDrops(true);
 
-   layout = new QGridLayout(this);
+   layout = new QGridLayout {this};
    layout->setMargin(margin);
    layout->setSpacing(spacing);
-
-   QString filename {"./images/number"};
-   i = -1;
-
-   for (auto e : state)
-   {
-      i++;
-      if (0 == static_cast<int>(e)) continue;
-
-      QLabel *icon {new QLabel(this)};
-      QPixmap pixmap {filename + QString::number(static_cast<int>(e)) + ".png"};
-      icon->setPixmap(pixmap.scaled(image_side, image_side, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-      icon->setAttribute(Qt::WA_DeleteOnClose);
-      layout->addWidget(icon, i / side, i % side);
-   }
+   rebuild_icons();
 }
 
 void game_widget::dragEnterEvent(QDragEnterEvent *event)
@@ -58,7 +113,7 @@ void game_widget::dragEnterEvent(QDragEnterEvent *event)
 
 void game_widget::dragMoveEvent(QDragMoveEvent *event)
 {
-   // DO drag'n'drop only within the same widget
+   // Do drag'n'drop only within the same widget
    if (event->mimeData()->hasFormat("application/x-gicon-dnddata") && this == event->source())
    {
       event->setDropAction(Qt::MoveAction);
