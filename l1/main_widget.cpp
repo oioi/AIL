@@ -99,7 +99,7 @@ void main_widget::change_state(state newstate)
 void main_widget::replay()
 {
    change_state(state::replay);
-   init_state->replay(last_solution, 500);
+   init_state->replay(last_solution.steps, 500);
    change_state(state::solved);
 }
 
@@ -112,7 +112,7 @@ void main_widget::solve()
    QTime time {QTime::currentTime()};
    QString timestr {time.toString()};
 
-   if (last_solution.empty())
+   if (last_solution.steps.empty())
    {
       textout->appendPlainText(timestr + "\tNo solution can be found.");
       change_state(state::unsolved);
@@ -120,7 +120,10 @@ void main_widget::solve()
 
    else
    {
-      textout->appendPlainText(timestr +  "\tSolution found with " + QString::number(last_solution.size()) + " steps.");
+      textout->appendPlainText(timestr +  "\tSolution found with " + QString::number(last_solution.steps.size()) + " steps.");
       change_state(state::solved);
    }
+
+   textout->appendPlainText("\tExpanded nodes: " + QString::number(last_solution.expanded_nodes) +
+                            "\n\tCreated nodes:    " + QString::number(last_solution.created_nodes) + '\n');
 }

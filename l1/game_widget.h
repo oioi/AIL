@@ -29,6 +29,9 @@ class game_widget : public QFrame
       void state_changed();
 
    private:
+      void rebuild_icons();
+      QPoint pos_to_index(const QPoint &source);
+
       unsigned image_side;
       state_array state;
 
@@ -37,9 +40,6 @@ class game_widget : public QFrame
 
       QGridLayout *layout;
       static std::unordered_map<elem, QPixmap> numb_pixmaps;
-
-      void rebuild_icons();
-      QPoint pos_to_index(const QPoint &source);
 };
 
 #endif // GAME_WIDGET_H

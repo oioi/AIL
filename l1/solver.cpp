@@ -45,6 +45,7 @@ node * solver::create_node(node *parent, const action &res_action, unsigned long
       node *nptr {new node {new_state, parent, res_action, depth}};
       checked_states[hash] = nptr;
 
+      created_nodes++;
       node_queue.push_back(nptr);
       return nptr;
    }
@@ -58,25 +59,25 @@ node * solver::create_node(node *parent, const action &res_action, unsigned long
 
 void solver::expand_node(node *exp)
 {
+   expanded_nodes++;
    unsigned long depth = exp->depth + 1;
-   if (depth > maxdepth) return;
+   if (0 != maxdepth && depth > maxdepth) return;
 
    unsigned char target {};
    for (auto e : exp->state) {
       if (e == elem::free) break; target++; }
 
-   int i {};
+   unsigned i {};
    for (auto source : possible_moves[target])
       exp->childs[i++] = create_node(exp, {source, target}, depth);
 }
 
-solution solver::solve()
+solution_info solver::solve()
 {
-   node_queue.clear();
-   checked_states.clear();
-
-   solution ret;
+   solution_info ret;
    node init_node {init_state, nullptr};
+
+   checked_states[hash_state(init_node.state)] = &init_node;
    expand_node(&init_node);
 
    for (;;)
@@ -87,13 +88,15 @@ solution solver::solve()
 
       if (match_goal(exp))
       {
-         for (; nullptr != exp; exp = exp->parent)
-            ret.push_front(exp->res_action);
+         for (; nullptr != exp->parent; exp = exp->parent)
+            ret.steps.push_front(exp->res_action);
          break;
       }
 
       expand_node(exp);
    }
 
+   ret.expanded_nodes = expanded_nodes;
+   ret.created_nodes = created_nodes;
    return ret;
 }

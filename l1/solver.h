@@ -39,10 +39,12 @@ struct node
    node *parent;
 
    unsigned long depth;
+   unsigned long pathcost;
+
    std::array<node *, 4> childs;
 
-   node(const state_array &state_, node *parent_, const action &res_action_ = {}, unsigned long depth_ = 0) :
-      state{}, parent{parent_}, res_action{res_action_}, depth{depth_}
+   node(const state_array &state_, node *parent_, const action &res_action_ = {}, unsigned long depth_ = 0, unsigned long pathcost_ = 0) :
+      state{}, parent{parent_}, res_action{res_action_}, depth{depth_}, pathcost{pathcost_}
    {
       state = state_;
       childs.fill(nullptr);
@@ -51,7 +53,52 @@ struct node
    ~node() { for (auto ch : childs) delete ch; }
 };
 
+class strategy_queue
+{
+   public:
+      virtual void insert(node *nd) = 0;
+      virtual node * getnext() = 0;
+      virtual bool empty() = 0;
+
+      virtual ~strategy_queue() { }
+};
+
+class basic_strategy_queue : public strategy_queue
+{
+   public:
+      bool empty() override { return node_queue.empty(); }
+
+      node * getnext() override
+      {
+         node *nd = node_queue.front();
+         node_queue.pop_front();
+         return nd;
+      }
+
+   protected:
+      std::deque<node *> node_queue;
+};
+
+class width_strategy_queue : public basic_strategy_queue
+{
+   public:
+      void insert(node *nd) override { node_queue.push_back(nd); }
+};
+
+class depth_strategy_queue : public basic_strategy_queue
+{
+   public:
+      void insert(node *nd) override { node_queue.push_front(nd); }
+};
+
 using solution = std::deque<action>;
+
+struct solution_info
+{
+   unsigned expanded_nodes {};
+   unsigned created_nodes  {};
+   solution steps;
+};
 
 class solver
 {
@@ -63,18 +110,21 @@ class solver
          goal_state = goal_state_;
       }
 
-      solution solve();
+      solution_info solve();
 
    private:
       bool match_goal(node *exp) { return exp->state == goal_state; }
       uint64_t hash_state(const state_array &state);
 
       void expand_node(node *exp);
-      node * create_node(node *parent, const action &res_action, unsigned long depth = 0);
+      node * create_node(node *parent, const action &res_action, unsigned long depth);
 
       unsigned long maxdepth;
       state_array init_state;
       state_array goal_state;
+
+      unsigned expanded_nodes {0};
+      unsigned created_nodes  {1}; // We always have init state.
 
       using statemap = std::unordered_map<uint64_t, node *>;
       std::deque<node *> node_queue;

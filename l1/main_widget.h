@@ -33,6 +33,9 @@ class main_widget : public QWidget
       void conditions_changed() { change_state(state::init); }
 
    private:
+      bool eventFilter(QObject *watched, QEvent *event) override;
+      void change_state(state newstate);
+
       game_widget *init_state;
       game_widget *goal_state;
       QPlainTextEdit *textout;
@@ -42,10 +45,7 @@ class main_widget : public QWidget
       QSpinBox *maxdepth_box;
 
       state laststate {state::init};
-      solution last_solution;
-
-      bool eventFilter(QObject *watched, QEvent *event) override;
-      void change_state(state newstate);
+      solution_info last_solution;
 };
 
 #endif // MAIN_WIDGET_H
