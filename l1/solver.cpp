@@ -1,5 +1,6 @@
 #include "solver.h"
 
+solver::statemap solver::checked_states;
 const std::vector<std::vector<unsigned char>> solver::possible_moves {
    {1, 3},
    {0, 2, 4},
@@ -11,6 +12,22 @@ const std::vector<std::vector<unsigned char>> solver::possible_moves {
    {4, 6, 8},
    {5, 7}
 };
+
+solver::solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, unsigned long maxdepth_)
+   : maxdepth{maxdepth_}
+{
+   init_state = init_state_;
+   goal_state = goal_state_;
+
+   checked_states.clear();
+   checked_states.reserve(max_combinations);
+
+   switch(strat)
+   {
+      case strategy_type::depth: node_queue = new depth_strategy_queue; break;
+      case strategy_type::width: node_queue = new width_strategy_queue; break;
+   }
+}
 
 uint64_t solver::hash_state(const state_array &state)
 {
@@ -39,22 +56,19 @@ node * solver::create_node(node *parent, const action &res_action, unsigned long
    std::swap(new_state[res_action.from], new_state[res_action.to]);
    uint64_t hash = hash_state(new_state);
 
-   statemap::iterator it = checked_states.find(hash);
-   if (checked_states.end() == it)
-   {
-      node *nptr {new node {new_state, parent, res_action, depth}};
-      checked_states[hash] = nptr;
+   statemap::iterator it = checked_states.find(hash); 
 
-      created_nodes++;
-      node_queue.push_back(nptr);
-      return nptr;
-   }
+   // NOTE: i am not sure that this is right behaviour in all cases.
+   // for BFS-search it's right, because if we've already seen some state
+   // we can find it again only at lower level of tree.
+   if (checked_states.end() != it) return nullptr;
 
-   if (depth >= it->second->depth) return nullptr;
+   node *nptr {new node {new_state, parent, res_action, depth}};
+   checked_states[hash] = nptr;
 
-   // This should not happen as we're going through the tree by width.
-   // Obviously if we've already seen some state, we can we found it again only at lower depth.
-   throw std::runtime_error {"Found same state with shorter path?"};
+   created_nodes++;
+   node_queue->insert(nptr);
+   return nptr;
 }
 
 void solver::expand_node(node *exp)
@@ -75,16 +89,15 @@ void solver::expand_node(node *exp)
 solution_info solver::solve()
 {
    solution_info ret;
-   node init_node {init_state, nullptr};
+   node *init_node {new node {init_state, nullptr}};
 
-   checked_states[hash_state(init_node.state)] = &init_node;
-   expand_node(&init_node);
+   checked_states[hash_state(init_node->state)] = init_node;
+   expand_node(init_node);
 
    for (;;)
    {
-      if (node_queue.empty()) break;
-      node *exp = node_queue.front();
-      node_queue.pop_front();
+      if (node_queue->empty()) break;
+      node *exp = node_queue->getnext();
 
       if (match_goal(exp))
       {

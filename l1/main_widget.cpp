@@ -33,8 +33,8 @@ main_widget::main_widget(const std::initializer_list<elem> &init_state_, const s
    connect(replay_button, SIGNAL(clicked(bool)), SLOT(replay()));
 
    maxdepth_box = new QSpinBox {this};
-   maxdepth_box->setRange(1, 40);
-   maxdepth_box->setValue(40);
+   maxdepth_box->setRange(1, 70000);
+   maxdepth_box->setValue(70000);
    connect(maxdepth_box, SIGNAL(valueChanged(int)), SLOT(conditions_changed()));
 
    QVBoxLayout *controls_layout {new QVBoxLayout};
@@ -106,8 +106,17 @@ void main_widget::replay()
 void main_widget::solve()
 {
    change_state(state::solving);
-   solver current {init_state->get_state(), goal_state->get_state(), (unsigned long) maxdepth_box->value()};
-   last_solution = current.solve();
+
+   try {
+      solver current {init_state->get_state(), goal_state->get_state(), strategy_type::width, (unsigned long) maxdepth_box->value()};
+      last_solution = current.solve();
+   }
+   catch (std::exception &exc)
+   {
+      textout->appendPlainText("Exception thrown: " + QString(exc.what()));
+      change_state(state::unsolved);
+      return;
+   }
 
    QTime time {QTime::currentTime()};
    QString timestr {time.toString()};

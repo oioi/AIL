@@ -16,7 +16,10 @@ enum class elem : unsigned char
    free
 };
 
-enum { side = 3 };
+enum {
+   side = 3,
+   max_combinations = 181440
+};
 
 using state_array = std::array<elem, side * side>;
 

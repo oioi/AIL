@@ -49,8 +49,12 @@ struct node
       state = state_;
       childs.fill(nullptr);
    }
+};
 
-   ~node() { for (auto ch : childs) delete ch; }
+enum class strategy_type
+{
+   width,
+   depth
 };
 
 class strategy_queue
@@ -103,14 +107,17 @@ struct solution_info
 class solver
 {
    public:
-      solver(const state_array &init_state_, const state_array &goal_state_, unsigned long maxdepth_) :
-         maxdepth{maxdepth_}
-      {
-         init_state = init_state_;
-         goal_state = goal_state_;
-      }
-
+      solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, unsigned long maxdepth_);
       solution_info solve();
+
+      ~solver() {
+         delete node_queue;
+
+         // Every seen state stored in the hash-table. We're deleting nodes from
+         // here, because if we're using DFS strategy, then tree can be long enough
+         // to cause stack overflow when using recursive deletion in node's destructor.
+         for (auto node : checked_states) delete node.second;
+      }
 
    private:
       bool match_goal(node *exp) { return exp->state == goal_state; }
@@ -126,10 +133,10 @@ class solver
       unsigned expanded_nodes {0};
       unsigned created_nodes  {1}; // We always have init state.
 
-      using statemap = std::unordered_map<uint64_t, node *>;
-      std::deque<node *> node_queue;
-      statemap checked_states;
+      strategy_queue *node_queue;
 
+      using statemap = std::unordered_map<uint64_t, node *>;
+      static statemap checked_states;
       static const std::vector<std::vector<unsigned char>> possible_moves;
 };
 
