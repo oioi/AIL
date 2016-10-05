@@ -13,8 +13,8 @@ const std::vector<std::vector<unsigned char>> solver::possible_moves {
    {5, 7}
 };
 
-solver::solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, int maxdepth_)
-   : maxdepth{maxdepth_}
+solver::solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strategy_, int maxdepth_)
+   : maxdepth{maxdepth_}, strategy{strategy_}
 {
    init_state = init_state_;
    goal_state = goal_state_;
@@ -22,10 +22,14 @@ solver::solver(const state_array &init_state_, const state_array &goal_state_, s
    checked_states.clear();
    checked_states.reserve(max_combinations);
 
-   switch(strat)
+   switch(strategy)
    {
       case strategy_type::depth: node_queue = new depth_strategy_queue; break;
       case strategy_type::width: node_queue = new width_strategy_queue; break;
+
+      case strategy_type::astar_h1:
+         node_queue = new priority_queue;
+         break;
    }
 }
 
@@ -50,6 +54,16 @@ uint64_t solver::hash_state(const state_array &state)
    return ret;
 }
 
+int solver::h1cost(const state_array &state)
+{
+   int cost {};
+   for (int i = 0; i < side * side; i++) {
+      if (state[i] != goal_state[i]) cost++;
+   }
+
+   return cost;
+}
+
 node * solver::create_node(node *parent, const action &res_action, int depth)
 {
    state_array new_state = parent->state;
@@ -63,11 +77,14 @@ node * solver::create_node(node *parent, const action &res_action, int depth)
    // we can find it again only at lower level of tree.
    if (checked_states.end() != it) return nullptr;
 
-   node *nptr {new node {new_state, parent, res_action, depth}};
+   int hcost {};
+   if (strategy_type::astar_h1 == strategy) hcost = depth + h1cost(new_state);
+
+   node *nptr {new node {new_state, parent, res_action, depth, hcost}};
    checked_states[hash] = nptr;
+   node_queue->insert(nptr);
 
    created_nodes++;
-   node_queue->insert(nptr);
    return nptr;
 }
 

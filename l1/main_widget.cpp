@@ -29,7 +29,7 @@ main_widget::main_widget(const std::initializer_list<elem> &init_state_, const s
 
    replay_button = new QPushButton {"&Replay", this};
    replay_button->setEnabled(false);
-   connect(replay_button, SIGNAL(clicked(bool)), SLOT(replay()));
+   connect(replay_button, &QPushButton::clicked, this, &main_widget::replay);
 
    QVBoxLayout *controls_layout {new QVBoxLayout};
    controls_layout->setAlignment(Qt::AlignTop);

@@ -3,6 +3,8 @@
 
 #include "game.h"
 
+#include <map>
+#include <queue>
 #include <deque>
 #include <vector>
 #include <unordered_map>
@@ -39,12 +41,12 @@ struct node
    node *parent;
 
    int depth;
-   int pathcost;
+   int hcost;
 
    std::array<node *, 4> childs;
 
-   node(const state_array &state_, node *parent_, const action &res_action_ = {}, int depth_ = 0, int pathcost_ = 0) :
-      state{}, parent{parent_}, res_action{res_action_}, depth{depth_}, pathcost{pathcost_}
+   node(const state_array &state_, node *parent_, const action &res_action_ = {}, int depth_ = 0, int hcost_ = 0) :
+      state{}, parent{parent_}, res_action{res_action_}, depth{depth_}, hcost{hcost_}
    {
       state = state_;
       childs.fill(nullptr);
@@ -54,7 +56,8 @@ struct node
 enum class strategy_type
 {
    depth,
-   width
+   width,
+   astar_h1
 };
 
 class strategy_queue
@@ -95,6 +98,26 @@ class depth_strategy_queue : public basic_strategy_queue
       void insert(node *nd) override { node_queue.push_front(nd); }
 };
 
+class priority_queue : public strategy_queue
+{
+   public:
+      bool empty() override { return node_queue.empty(); }
+      void insert(node *nd) override { node_queue.push(nd); }
+
+      node * getnext() override {
+         node *nd {node_queue.top()};
+         node_queue.pop();
+         return nd;
+      }
+
+   private:
+      struct cmp {
+         bool operator() (node *a, node *b) { return a->hcost > b->hcost; }
+      };
+
+      std::priority_queue<node *, std::vector<node *>, cmp> node_queue;
+};
+
 using solution = std::deque<action>;
 
 struct solution_info
@@ -107,7 +130,7 @@ struct solution_info
 class solver
 {
    public:
-      solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, int maxdepth_);
+      solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strategy_, int maxdepth_);
       solution_info solve();
 
       ~solver() {
@@ -126,6 +149,8 @@ class solver
       void expand_node(node *exp);
       node * create_node(node *parent, const action &res_action, int depth);
 
+      int h1cost(const state_array &state);
+
       int maxdepth;
       state_array init_state;
       state_array goal_state;
@@ -133,6 +158,7 @@ class solver
       unsigned expanded_nodes {0};
       unsigned created_nodes  {1}; // We always have init state.
 
+      strategy_type strategy;
       strategy_queue *node_queue;
 
       using statemap = std::unordered_map<uint64_t, node *>;

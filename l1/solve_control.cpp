@@ -6,7 +6,7 @@
 solve_control::solve_control(main_widget *parent) : QWidget(parent)
 {
    QStringList lst;
-   lst << "DFS" << "BFS";
+   lst << "DFS" << "BFS" << "A* (H1)";
 
    strategy_selection = new QComboBox {this};
    strategy_selection->addItems(lst);
