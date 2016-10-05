@@ -38,12 +38,12 @@ struct node
    action res_action;
    node *parent;
 
-   unsigned long depth;
-   unsigned long pathcost;
+   int depth;
+   int pathcost;
 
    std::array<node *, 4> childs;
 
-   node(const state_array &state_, node *parent_, const action &res_action_ = {}, unsigned long depth_ = 0, unsigned long pathcost_ = 0) :
+   node(const state_array &state_, node *parent_, const action &res_action_ = {}, int depth_ = 0, int pathcost_ = 0) :
       state{}, parent{parent_}, res_action{res_action_}, depth{depth_}, pathcost{pathcost_}
    {
       state = state_;
@@ -53,8 +53,8 @@ struct node
 
 enum class strategy_type
 {
-   width,
-   depth
+   depth,
+   width
 };
 
 class strategy_queue
@@ -107,7 +107,7 @@ struct solution_info
 class solver
 {
    public:
-      solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, unsigned long maxdepth_);
+      solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, int maxdepth_);
       solution_info solve();
 
       ~solver() {
@@ -124,9 +124,9 @@ class solver
       uint64_t hash_state(const state_array &state);
 
       void expand_node(node *exp);
-      node * create_node(node *parent, const action &res_action, unsigned long depth);
+      node * create_node(node *parent, const action &res_action, int depth);
 
-      unsigned long maxdepth;
+      int maxdepth;
       state_array init_state;
       state_array goal_state;
 

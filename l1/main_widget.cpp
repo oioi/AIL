@@ -21,28 +21,21 @@ main_widget::main_widget(const std::initializer_list<elem> &init_state_, const s
    gw_layout->addWidget(init_state);
    gw_layout->addWidget(goal_state);
 
-   connect(init_state, SIGNAL(state_changed()), SLOT(conditions_changed()));
-   connect(goal_state, SIGNAL(state_changed()), SLOT(conditions_changed()));
+   connect(init_state, &game_widget::state_changed, this, &main_widget::conditions_changed);
+   connect(goal_state, &game_widget::state_changed, this, &main_widget::conditions_changed);
 
    // Right controls - buttons and spinbox
-   solve_button = new QPushButton {"&Solve", this};
-   connect(solve_button, SIGNAL(clicked(bool)), SLOT(solve()));
+   solve_cnt = new solve_control {this};
 
    replay_button = new QPushButton {"&Replay", this};
    replay_button->setEnabled(false);
    connect(replay_button, SIGNAL(clicked(bool)), SLOT(replay()));
 
-   maxdepth_box = new QSpinBox {this};
-   maxdepth_box->setRange(1, 70000);
-   maxdepth_box->setValue(70000);
-   connect(maxdepth_box, SIGNAL(valueChanged(int)), SLOT(conditions_changed()));
-
    QVBoxLayout *controls_layout {new QVBoxLayout};
    controls_layout->setAlignment(Qt::AlignTop);
    controls_layout->setSpacing(10);
 
-   controls_layout->addWidget(maxdepth_box);
-   controls_layout->addWidget(solve_button);
+   controls_layout->addWidget(solve_cnt);
    controls_layout->addWidget(replay_button);
    gw_layout->addLayout(controls_layout);
 
@@ -70,27 +63,27 @@ void main_widget::change_state(state newstate)
    switch (laststate)
    {
       case state::init:
-         maxdepth_box->setEnabled(true);
-         solve_button->setEnabled(true);
+         solve_cnt->set_depth_enabled(true);
+         solve_cnt->set_solve_enabled(true);
          replay_button->setEnabled(false);
          break;
 
-      case state::solved:
-         maxdepth_box->setEnabled(true);
-         solve_button->setEnabled(false);
+      case state::solved:        
+         solve_cnt->set_depth_enabled(true);
+         solve_cnt->set_solve_enabled(false);
          replay_button->setEnabled(true);
          break;
 
       case state::replay:
       case state::solving:
-         maxdepth_box->setEnabled(false);
-         solve_button->setEnabled(false);
+         solve_cnt->set_depth_enabled(false);
+         solve_cnt->set_solve_enabled(false);
          replay_button->setEnabled(false);
          break;
 
       case state::unsolved:
-         maxdepth_box->setEnabled(true);
-         solve_button->setEnabled(false);
+         solve_cnt->set_depth_enabled(true);
+         solve_cnt->set_solve_enabled(false);
          replay_button->setEnabled(false);
          break;
    }
@@ -108,7 +101,8 @@ void main_widget::solve()
    change_state(state::solving);
 
    try {
-      solver current {init_state->get_state(), goal_state->get_state(), strategy_type::width, (unsigned long) maxdepth_box->value()};
+      solver current {init_state->get_state(), goal_state->get_state(),
+                      static_cast<strategy_type>(solve_cnt->get_strategy()), solve_cnt->get_depth()};
       last_solution = current.solve();
    }
    catch (std::exception &exc)

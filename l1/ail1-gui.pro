@@ -15,10 +15,12 @@ TEMPLATE = app
 SOURCES += main.cpp \
     game_widget.cpp \
     main_widget.cpp \
-    solver.cpp
+    solver.cpp \
+    solve_control.cpp
 
 HEADERS  += \
     game.h \
     game_widget.h \
     main_widget.h \
-    solver.h
+    solver.h \
+    solve_control.h

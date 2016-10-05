@@ -3,10 +3,10 @@
 
 #include "solver.h"
 #include "game_widget.h"
+#include "solve_control.h"
 
 #include <QWidget>
 #include <QPlainTextEdit>
-#include <QSpinBox>
 #include <QPushButton>
 
 enum class state
@@ -27,7 +27,7 @@ class main_widget : public QWidget
                   const std::initializer_list<elem> &goal_state_,
                   unsigned image_side = 96, QWidget *parent = nullptr);
 
-   private slots:
+   public slots:
       void solve();
       void replay();
       void conditions_changed() { change_state(state::init); }
@@ -40,9 +40,8 @@ class main_widget : public QWidget
       game_widget *goal_state;
       QPlainTextEdit *textout;
 
-      QPushButton *solve_button;
+      solve_control *solve_cnt;
       QPushButton *replay_button;
-      QSpinBox *maxdepth_box;
 
       state laststate {state::init};
       solution_info last_solution;

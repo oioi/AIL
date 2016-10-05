@@ -13,7 +13,7 @@ const std::vector<std::vector<unsigned char>> solver::possible_moves {
    {5, 7}
 };
 
-solver::solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, unsigned long maxdepth_)
+solver::solver(const state_array &init_state_, const state_array &goal_state_, strategy_type strat, int maxdepth_)
    : maxdepth{maxdepth_}
 {
    init_state = init_state_;
@@ -50,7 +50,7 @@ uint64_t solver::hash_state(const state_array &state)
    return ret;
 }
 
-node * solver::create_node(node *parent, const action &res_action, unsigned long depth)
+node * solver::create_node(node *parent, const action &res_action, int depth)
 {
    state_array new_state = parent->state;
    std::swap(new_state[res_action.from], new_state[res_action.to]);
@@ -59,7 +59,7 @@ node * solver::create_node(node *parent, const action &res_action, unsigned long
    statemap::iterator it = checked_states.find(hash); 
 
    // NOTE: i am not sure that this is right behaviour in all cases.
-   // for BFS-search it's right, because if we've already seen some state
+   // for BFS it's right, because if we've already seen some state
    // we can find it again only at lower level of tree.
    if (checked_states.end() != it) return nullptr;
 
@@ -74,7 +74,7 @@ node * solver::create_node(node *parent, const action &res_action, unsigned long
 void solver::expand_node(node *exp)
 {
    expanded_nodes++;
-   unsigned long depth = exp->depth + 1;
+   int depth = exp->depth + 1;
    if (0 != maxdepth && depth > maxdepth) return;
 
    unsigned char target {};
