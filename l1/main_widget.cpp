@@ -7,6 +7,14 @@
 
 #include <QTime>
 
+std::vector<buttons_en_state> main_widget::buttons_state {
+   { true,  true,  true,  false }, // init
+   { false, false, false, false }, // solving
+   { true,  true,  false, false }, // unsolved
+   { true,  true,  false, true  }, // solved
+   { false, false, false, false }  // replay
+};
+
 main_widget::main_widget(const std::initializer_list<elem> &init_state_, const std::initializer_list<elem> &goal_state_,
                          unsigned image_side, QWidget *parent) :
    QWidget(parent)
@@ -59,34 +67,12 @@ bool main_widget::eventFilter(QObject *, QEvent *event)
 void main_widget::change_state(state newstate)
 {
    laststate = newstate;
+   buttons_en_state &bs = buttons_state[static_cast<int>(laststate)];
 
-   switch (laststate)
-   {
-      case state::init:
-         solve_cnt->set_depth_enabled(true);
-         solve_cnt->set_solve_enabled(true);
-         replay_button->setEnabled(false);
-         break;
-
-      case state::solved:        
-         solve_cnt->set_depth_enabled(true);
-         solve_cnt->set_solve_enabled(false);
-         replay_button->setEnabled(true);
-         break;
-
-      case state::replay:
-      case state::solving:
-         solve_cnt->set_depth_enabled(false);
-         solve_cnt->set_solve_enabled(false);
-         replay_button->setEnabled(false);
-         break;
-
-      case state::unsolved:
-         solve_cnt->set_depth_enabled(true);
-         solve_cnt->set_solve_enabled(false);
-         replay_button->setEnabled(false);
-         break;
-   }
+   solve_cnt->set_select_enabled(bs.strat_en);
+   solve_cnt->set_depth_enabled(bs.depth_en);
+   solve_cnt->set_solve_enabled(bs.solve_en);
+   replay_button->setEnabled(bs.replay_en);
 }
 
 void main_widget::replay()

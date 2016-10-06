@@ -18,6 +18,14 @@ enum class state
    replay
 };
 
+struct buttons_en_state
+{
+   bool strat_en;
+   bool depth_en;
+   bool solve_en;
+   bool replay_en;
+};
+
 class main_widget : public QWidget
 {
    Q_OBJECT
@@ -45,6 +53,8 @@ class main_widget : public QWidget
 
       state laststate {state::init};
       solution_info last_solution;
+
+      static std::vector<buttons_en_state> buttons_state;
 };
 
 #endif // MAIN_WIDGET_H

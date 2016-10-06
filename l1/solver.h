@@ -3,7 +3,6 @@
 
 #include "game.h"
 
-#include <map>
 #include <queue>
 #include <deque>
 #include <vector>
@@ -57,7 +56,8 @@ enum class strategy_type
 {
    depth,
    width,
-   astar_h1
+   astar_h1,
+   astar_h2
 };
 
 class strategy_queue
@@ -150,6 +150,7 @@ class solver
       node * create_node(node *parent, const action &res_action, int depth);
 
       int h1cost(const state_array &state);
+      int h2cost(const state_array &state);
 
       int maxdepth;
       state_array init_state;

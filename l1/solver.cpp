@@ -28,6 +28,7 @@ solver::solver(const state_array &init_state_, const state_array &goal_state_, s
       case strategy_type::width: node_queue = new width_strategy_queue; break;
 
       case strategy_type::astar_h1:
+      case strategy_type::astar_h2:
          node_queue = new priority_queue;
          break;
    }
@@ -64,6 +65,22 @@ int solver::h1cost(const state_array &state)
    return cost;
 }
 
+int solver::h2cost(const state_array &state)
+{
+   int cost {};
+   for (int d,j, i = 0; i < side * side; i++)
+   {
+      for (j = 0; j < side * side; j++) {
+         if (state[i] == goal_state[j]) break;
+      }
+
+      d = i > j ? i - j : j - i;
+      cost += d / side + d % side;
+   }
+
+   return cost;
+}
+
 node * solver::create_node(node *parent, const action &res_action, int depth)
 {
    state_array new_state = parent->state;
@@ -79,6 +96,7 @@ node * solver::create_node(node *parent, const action &res_action, int depth)
 
    int hcost {};
    if (strategy_type::astar_h1 == strategy) hcost = depth + h1cost(new_state);
+   if (strategy_type::astar_h2 == strategy) hcost = depth + h2cost(new_state);
 
    node *nptr {new node {new_state, parent, res_action, depth, hcost}};
    checked_states[hash] = nptr;

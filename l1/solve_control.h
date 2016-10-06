@@ -19,8 +19,9 @@ class solve_control : public QWidget
       int get_depth() const { return maxdepth_box->value(); }
       int get_strategy() const { return strategy_selection->currentIndex(); }
 
-      void set_solve_enabled(bool enabled) { solve_button->setEnabled(enabled); }
-      void set_depth_enabled(bool enabled) { maxdepth_box->setEnabled(enabled); }
+      void set_solve_enabled(bool enabled)  { solve_button->setEnabled(enabled); }
+      void set_depth_enabled(bool enabled)  { maxdepth_box->setEnabled(enabled); }
+      void set_select_enabled(bool enabled) { strategy_selection->setEnabled(enabled); }
 
    private slots:
       void strategy_changed();
