@@ -7,7 +7,7 @@
 
 #include <QTime>
 
-std::vector<buttons_en_state> main_widget::buttons_state {
+const std::vector<buttons_en_state> main_widget::buttons_state {
    { true,  true,  true,  false }, // init
    { false, false, false, false }, // solving
    { true,  true,  false, false }, // unsolved
@@ -67,7 +67,7 @@ bool main_widget::eventFilter(QObject *, QEvent *event)
 void main_widget::change_state(state newstate)
 {
    laststate = newstate;
-   buttons_en_state &bs = buttons_state[static_cast<int>(laststate)];
+   const buttons_en_state &bs = buttons_state[static_cast<int>(laststate)];
 
    solve_cnt->set_select_enabled(bs.strat_en);
    solve_cnt->set_depth_enabled(bs.depth_en);
@@ -91,6 +91,7 @@ void main_widget::solve()
                       static_cast<strategy_type>(solve_cnt->get_strategy()), solve_cnt->get_depth()};
       last_solution = current.solve();
    }
+
    catch (std::exception &exc)
    {
       textout->appendPlainText("Exception thrown: " + QString(exc.what()));
@@ -98,8 +99,7 @@ void main_widget::solve()
       return;
    }
 
-   QTime time {QTime::currentTime()};
-   QString timestr {time.toString()};
+   QString timestr {QTime(QTime::currentTime()).toString()};
 
    if (last_solution.steps.empty())
    {

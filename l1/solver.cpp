@@ -1,6 +1,6 @@
 #include "solver.h"
 
-solver::statemap solver::checked_states;
+solver::statemap solver::checked_states {max_combinations};
 const std::vector<std::vector<unsigned char>> solver::possible_moves {
    {1, 3},
    {0, 2, 4},
@@ -18,9 +18,7 @@ solver::solver(const state_array &init_state_, const state_array &goal_state_, s
 {
    init_state = init_state_;
    goal_state = goal_state_;
-
    checked_states.clear();
-   checked_states.reserve(max_combinations);
 
    switch(strategy)
    {
@@ -75,7 +73,7 @@ int solver::h2cost(const state_array &state)
       }
 
       d = i > j ? i - j : j - i;
-      cost += d / side + d % side;
+      if (0 != d) cost += d / side + d % side;
    }
 
    return cost;
@@ -87,7 +85,7 @@ node * solver::create_node(node *parent, const action &res_action, int depth)
    std::swap(new_state[res_action.from], new_state[res_action.to]);
    uint64_t hash = hash_state(new_state);
 
-   statemap::iterator it = checked_states.find(hash); 
+   statemap::const_iterator it = checked_states.find(hash);
 
    // NOTE: i am not sure that this is right behaviour in all cases.
    // for BFS it's right, because if we've already seen some state
@@ -129,10 +127,9 @@ solution_info solver::solve()
    checked_states[hash_state(init_node->state)] = init_node;
    expand_node(init_node);
 
-   for (;;)
+   for (node *exp; !node_queue->empty(); expand_node(exp))
    {
-      if (node_queue->empty()) break;
-      node *exp = node_queue->getnext();
+      exp = node_queue->getnext();
 
       if (match_goal(exp))
       {
@@ -140,8 +137,6 @@ solution_info solver::solve()
             ret.steps.push_front(exp->res_action);
          break;
       }
-
-      expand_node(exp);
    }
 
    ret.expanded_nodes = expanded_nodes;

@@ -54,7 +54,7 @@ class main_widget : public QWidget
       state laststate {state::init};
       solution_info last_solution;
 
-      static std::vector<buttons_en_state> buttons_state;
+      static const std::vector<buttons_en_state> buttons_state;
 };
 
 #endif // MAIN_WIDGET_H
